@@ -15,6 +15,7 @@ Gemini 1.5 Flash 모델을 활용해 색상, 계절감, 스타일 밸런스를 �
 ## 3. Project Image  
 ![웹페이지 예상도](docs/ai_closet_stylist_homepage_ex.png)  
 
+해당이미지는 AI로 생성된 홈페이지 예시이며 추후 개발을 진행하면서 추가할 예정임.
 
 ---
 
@@ -109,5 +110,5 @@ React 프론트에서 코디 목록 + 설명 표시
 
 
 
-# 노션
+## 기타
 [노션](https://www.notion.so/28c2ec12d123814797d1c7b0b3d764a3)
