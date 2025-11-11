@@ -16,6 +16,9 @@ app.get("/", (_req, res) => {
     res.json({ status: "ok", service: "AI Closet Stylist (Firebase)" });
 });
 
+
+
+
 // 옷 목록 조회
 app.get("/api/clothes", async (_req, res) => {
     try {
