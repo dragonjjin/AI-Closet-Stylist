@@ -1,38 +1,101 @@
-.App {
-  text-align: center;
+/* reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+ul,
+ol {
+  list-style: none;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+a {
+  text-decoration: none;
+  color: #ccc;
+  font-size: 15px;
+  transition: color .2s;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+/* 페이지 내용이 헤더 뒤에 가리지 않게 상단 여백 */
+body {
+  padding-top: 60px;
+  background: #f5f5f5;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+
+/* ⬇️ 전체 너비 헤더(고정) */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  /* 양끝 붙이기 */
+  width: 100%;
+  /* 전체 폭 */
+  height: 60px;
+  background-color: #111;
+  border-bottom: 1px solid #222;
+  z-index: 1000;
+  /* 위로 띄우기 */
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
 }
 
-.App-link {
-  color: #61dafb;
+/* ⬇️ 안쪽 컨텐츠 래퍼: 가운데 정렬 + 좌우 패딩 */
+#nav3 {
+  width: 100%;
+  max-width: 1200px;
+  /* 필요 없으면 이 줄 삭제하면 완전 풀폭 */
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #ccc;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* 로고 */
+#nav3>a {
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+}
+
+/* 메뉴 */
+#nav3>ul {
+  display: flex;
+  gap: 25px;
+}
+
+#nav3>ul li a {
+  color: #ccc;
+}
+
+#nav3>ul li a:hover {
+  color: #fff;
+  border-bottom: 2px solid #f0efef;
+  padding-bottom: 2px;
+}
+
+/* 셀렉트 */
+#nav3>select {
+  padding: 3px 14px;
+  background-color: #111;
+  color: #ccc;
+  border: 1px solid #333;
+  border-radius: 20px;
+  outline: none;
+}
+
+#nav3>select:hover {
+  border-color: #fff;
+  color: #fff;
 }

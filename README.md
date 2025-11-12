@@ -1,109 +1,154 @@
-# AI Closet Stylist
+# AI Closet Stylist - React NavBar Guide
 
-## 1. Title  
-**AI Closet Stylist** — 사용자의 옷장 데이터를 기반으로, 날씨에 맞춰 AI가 오늘의 코디를 추천해주는 웹 애플리케이션
+## 1. 작동 방식
 
+React 기반으로 작성됨  
+
+- public/index.html은 한 번만 로드되는 기본 HTML 템플릿  
+- src/index.js에서 index.html의 <div id="root"></div>를 찾아 App.js 컴포넌트를 렌더링  
+- 모든 페이지 화면은 App.js 내부의 React 컴포넌트로 구성됨  
+- HTML이 아닌 JSX로 동적으로 생성  
+- React는 가상 DOM을 사용하여 변경된 부분만 갱신함  
+- 페이지 새로고침 없이 부드럽게 동작  
+
+public/
+┗ index.html ← 기본 HTML 템플릿 (root만 존재)
+src/
+┣ index.js ← React 진입점
+┗ App.js ← 실제 UI 렌더링 컴포넌트
 ---
 
-## 2. Abstract  
-AI Closet Stylist는 사용자가 직접 등록한 옷 정보를 바탕으로, OpenWeatherMap API에서 가져온 현재 날씨 데이터를 분석하여 AI가 코디를 제안하는 웹 서비스입니다.  
-Gemini 1.5 Flash 모델을 활용해 색상, 계절감, 스타일 밸런스를 종합적으로 고려한 추천 결과를 제공합니다.  
-간단한 인터페이스를 통해 옷 등록, 추천 받기, 추천 결과 확인을 수행할 수 있으며, 개인화된 AI 코디 경험을 제공합니다.
+## 2. 코드 요약
 
----
+아래 코드는 네브바만 표시되는 기본 버전으로, 다른 프로젝트에서도 복사해 바로 사용 가능함  
 
-## 3. Project Image  
-![웹페이지 예상도](docs/ai_closet_stylist_homepage_ex.png)  
+### src/App.js
+```jsx
+import './App.css';
 
-해당이미지는 AI로 생성된 홈페이지 예시이며 추후 개발을 진행하면서 실제 이미지를 추가할 예정입니다.
+function App() {
+  return (
+    <nav id="nav3">
+      <a href="/">AI Closet</a>
+      <ul>
+        <li><a href="/">menu1</a></li>
+        <li><a href="/">menu2</a></li>
+        <li><a href="/">menu3</a></li>
+        <li><a href="/">menu4</a></li>
+        <li><a href="/">menu5</a></li>
+      </ul>
+      <select>
+        <option>=test=</option>
+        <option>=test=</option>
+        <option>=test=</option>
+      </select>
+    </nav>
+  );
+}
 
----
+export default App;
 
-## 4. Project Schedule  
+src/App.css
+* { margin: 0; padding: 0; box-sizing: border-box; }
+ul, ol { list-style: none; }
+a { text-decoration: none; color: #ccc; font-size: 15px; transition: color .2s; }
 
-| 단계 | 기간 | 주요 내용 |
-| --- | --- | --- |
-| 1단계 | 11월 1일 ~ 11월 10일 | React 기본 UI 설계 및 옷 등록 기능 구현 |
-| 2단계 | 11월 11일 ~ 11월 20일 | Node.js 서버 및 API 연동 (OpenWeatherMap, Gemini) |
-| 3단계 | 11월 21일 ~ 11월 30일 | AI 코디 추천 로직 구현 및 프론트엔드 연결 |
-| 4단계 | 12월 1일 ~ 12월 10일 | UI 개선, 데이터 저장(SQLite) 기능 추가 |
-| 5단계 | 12월 11일 ~ 12월 17일 | 테스트 및 README/배포 준비 (최종 마감) |
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
 
-> **프로젝트 마감일:** Wednesday, December 17th
+body {
+  padding-top: 60px;
+  background: #f5f5f5;
+  font-family: 'Noto Sans KR', sans-serif;
+}
 
----
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  width: 100%;
+  height: 60px;
+  background-color: #111;
+  border-bottom: 1px solid #222;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+}
 
-## 5. Team Roles & Development Areas  
+#nav3 {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #ccc;
+}
 
-| 이름 | 역할 | 주요 담당 영역 |
-| --- | --- | --- |
-|  구현민 | Frontend 개발 | React 컴포넌트 설계, Tailwind CSS 스타일링, 결과 UI 구성 |
-|  이용진 | Backend 개발 | Node.js + Express 서버 구축, API 연동, 데이터 파이프라인 설계 |
-| 한태윤  | AI 연동 | Gemini 1.5 Flash API 설계, 프롬프트 엔지니어링, JSON 파싱 로직 |
-| 공통  | 데이터 관리 | SQLite/JSON 기반 데이터베이스 설계 및 저장 로직 |
-| 공통 | 총괄 및 문서화 | 일정 관리, 테스트 및 README 작성 |
+#nav3 > a {
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+}
 
----
+#nav3 > ul { display: flex; gap: 25px; }
+#nav3 > ul li a { color: #ccc; }
+#nav3 > ul li a:hover { color: #fff; border-bottom: 2px solid #fff; padding-bottom: 2px; }
 
-## 6. Technologies Used  
+#nav3 > select {
+  padding: 3px 14px;
+  background-color: #111;
+  color: #ccc;
+  border: 1px solid #333;
+  border-radius: 20px;
+  outline: none;
+}
+#nav3 > select:hover { border-color: #fff; color: #fff; }
 
-| 영역 | 기술 | 설명 |
-| --- | --- | --- |
-| Frontend | React, Tailwind CSS | 사용자 인터페이스 구현 |
-| Backend | Node.js, Express | REST API 서버 구축 |
-| AI Engine | Google Gemini 1.5 Flash API | 코디 추천 생성 모델 |
-| Weather API | OpenWeatherMap API | 날씨 데이터 수집 |
-| Database | SQLite (또는 JSON) | 옷장 데이터 저장 |
-| 기타 | GitHub, Vercel | 버전 관리 및 배포 환경 |
+3. 다른 페이지 적용 예시
 
----
+다른 컴포넌트를 추가하거나 페이지를 분리할 때 사용 가능
 
-## 7. System Flow Overview  
+src/pages/Home.js
+function Home() {
+  return (
+    <div style={{ marginTop: '100px', textAlign: 'center' }}>
+      <h2>홈 화면</h2>
+      <p>AI Closet Stylist의 홈 페이지</p>
+    </div>
+  );
+}
 
-사용자 → 옷 등록 → 서버 저장
-↓
-[추천받기 버튼 클릭]
-↓
-서버: 날씨 API로 현재 기온 가져옴
-↓
-Gemini 1.5 Flash에 프롬프트 전달:
-"오늘 21도, 옷 리스트 중 코디 3개 추천해줘"
-↓
-Gemini → 코디 조합 + 설명(JSON) 반환
-↓
-React 프론트에서 코디 목록 + 설명 표시
+export default Home;
 
+App.js에서 연결
+import './App.css';
+import Home from './pages/Home';
 
+function App() {
+  return (
+    <>
+      <nav id="nav3">
+        <a href="/">AI Closet</a>
+        <ul>
+          <li><a href="/">menu1</a></li>
+          <li><a href="/">menu2</a></li>
+          <li><a href="/">menu3</a></li>
+          <li><a href="/">menu4</a></li>
+          <li><a href="/">menu5</a></li>
+        </ul>
+        <select>
+          <option>=test=</option>
+          <option>=test=</option>
+          <option>=test=</option>
+        </select>
+      </nav>
+      <Home />
+    </>
+  );
+}
 
-
-
----
-
-## 8. Example Prompt  
-
-오늘의 날씨는 맑고 22도야.
-내 옷장에는 다음 옷들이 있어:
-
-라이트 그레이 후드
-
-흑청 자켓
-
-진청 데님 팬츠
-
-화이트 스니커즈
-이 중에서 색상 밸런스와 날씨를 고려해 코디 3개 추천해줘.
-각 코디는 상의/하의/신발로 구성하고, JSON 형식으로 출력해줘.
-
-
----
-
-## 9. Future Plan  
-- 계절별 추천 강화 (예: “겨울 외투 포함” 옵션)  
-- 사용자별 선호 색상/스타일 학습 기능 추가  
-- 다국어 지원 및 모바일 UI 최적화  
-
----
-
-
-
+export default App;
 
