@@ -1,21 +1,28 @@
 # AI Closet Stylist - React NavBar Guide
 
+---
+
 ## 1. 작동 방식
 
 React 기반으로 작성됨  
 
-- public/index.html은 한 번만 로드되는 기본 HTML 템플릿  
-- src/index.js에서 index.html의 <div id="root"></div>를 찾아 App.js 컴포넌트를 렌더링  
-- 모든 페이지 화면은 App.js 내부의 React 컴포넌트로 구성됨  
+- `public/index.html`은 한 번만 로드되는 기본 HTML 템플릿  
+- `src/index.js`에서 `index.html`의 `<div id="root"></div>`를 찾아 `App.js` 컴포넌트를 렌더링  
+- 모든 페이지 화면은 `App.js` 내부의 React 컴포넌트로 구성됨  
 - HTML이 아닌 JSX로 동적으로 생성  
 - React는 가상 DOM을 사용하여 변경된 부분만 갱신함  
 - 페이지 새로고침 없이 부드럽게 동작  
+
+```
 
 public/
 ┗ index.html ← 기본 HTML 템플릿 (root만 존재)
 src/
 ┣ index.js ← React 진입점
 ┗ App.js ← 실제 UI 렌더링 컴포넌트
+
+````
+
 ---
 
 ## 2. 코드 요약
@@ -47,8 +54,11 @@ function App() {
 }
 
 export default App;
+````
 
-src/App.css
+### src/App.css
+
+```css
 * { margin: 0; padding: 0; box-sizing: border-box; }
 ul, ol { list-style: none; }
 a { text-decoration: none; color: #ccc; font-size: 15px; transition: color .2s; }
@@ -106,12 +116,17 @@ nav {
   outline: none;
 }
 #nav3 > select:hover { border-color: #fff; color: #fff; }
+```
 
-3. 다른 페이지 적용 예시
+---
+
+## 3. 다른 페이지 적용 예시
 
 다른 컴포넌트를 추가하거나 페이지를 분리할 때 사용 가능
 
-src/pages/Home.js
+### src/pages/Home.js
+
+```jsx
 function Home() {
   return (
     <div style={{ marginTop: '100px', textAlign: 'center' }}>
@@ -122,8 +137,11 @@ function Home() {
 }
 
 export default Home;
+```
 
-App.js에서 연결
+### App.js에서 연결
+
+```jsx
 import './App.css';
 import Home from './pages/Home';
 
@@ -151,4 +169,17 @@ function App() {
 }
 
 export default App;
+```
 
+---
+
+## 4. 확장 가이드
+
+* 다른 페이지(`About.js`, `Style.js` 등)는 `src/pages` 폴더에 추가
+* `React Router`를 이용하면 메뉴 클릭 시 페이지 전환 가능
+* CSS는 `App.css`에 통합하거나 각 페이지별로 별도 구성 가능
+
+```
+
+---
+```
