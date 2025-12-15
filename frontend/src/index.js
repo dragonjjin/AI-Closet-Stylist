@@ -6,6 +6,7 @@ import Closet from "./closet";
 import AIRecommend from "./AIRecommend";
 import AIResult from "./AIResult";
 import UploadCloth from "./UploadCloth";
+import CalendarPage from "./CalendarPage";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
@@ -17,6 +18,7 @@ root.render(
             <Route path="/closet/upload" element={<UploadCloth />} />
             <Route path="/AI" element={<AIRecommend />} />
             <Route path="/AI/result" element={<AIResult />} />
+            <Route path="/calendar" element={<CalendarPage />} />
         </Routes>
     </BrowserRouter>
 );

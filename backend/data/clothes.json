@@ -1,5 +1,34 @@
 [
     {
+        "id": "1765808744781",
+        "name": "레더 블루종 자켓",
+        "type": "아우터",
+        "brand": "마크 곤잘레스",
+        "subType": "블루종",
+        "colors": [
+            "#000000"
+        ],
+        "thickness": "보통",
+        "features": [
+            "가죽",
+            "스트리트"
+        ],
+        "imageUrl": "/images/cloths/cloth-1765808744777.webp",
+        "createdAt": "2025-12-15T14:25:44.781Z"
+    },
+    {
+        "id": "1765802713857",
+        "name": "test",
+        "type": "아우터",
+        "brand": "브랜드 미지정",
+        "subType": "",
+        "colors": [],
+        "thickness": "",
+        "features": [],
+        "imageUrl": "/images/cloths/cloth-1765802713850.webp",
+        "createdAt": "2025-12-15T12:45:13.857Z"
+    },
+    {
         "id": "1765783964516",
         "name": "스탠다드 푸퍼 다운 자켓",
         "type": "아우터",
