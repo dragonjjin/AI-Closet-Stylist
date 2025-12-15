@@ -1,9 +1,8 @@
-// src/index.js
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import App from "./App";
-import Closet from "./closet"; // 확장자 생략 OK
+import Closet from "./closet";
 import AIRecommend from "./AIRecommend";
 import AIResult from "./AIResult";
 
