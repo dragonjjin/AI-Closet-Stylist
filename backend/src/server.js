@@ -78,13 +78,16 @@ app.get("/", (_req, res) => {
 });
 
 // ------------------------------------------
-// 1) 제미나이 추천
+// 1) 제미나이 추천 (수정된 부분)
 // ------------------------------------------
 app.post("/api/recommend", async (req, res) => {
     console.log("[BACKLOG] POST /api/recommend 요청 도착");
     try {
         const { clothes = [], selected = {} } = req.body;
-        const recs = await getRecommendations(selected, clothes);
+        
+        // [중요 수정] req 객체를 첫 번째 인자로 전달해야 WeatherService가 IP/위치를 읽을 수 있음
+        const recs = await getRecommendations(req, selected, clothes);
+        
         res.json({ recommendations: recs });
     } catch (e) {
         console.error("[ERROR] recommend:", e);

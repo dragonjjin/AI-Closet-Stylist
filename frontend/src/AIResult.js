@@ -37,7 +37,22 @@ export default function AIResult() {
                             코디 #{idx + 1}
                         </h3>
 
-                        {/* 가로 한 줄 정렬 */}
+                        {combo.reason && (
+                            <div
+                                style={{
+                                    backgroundColor: "#f0f8ff",
+                                    padding: "12px",
+                                    borderRadius: "8px",
+                                    marginBottom: "20px",
+                                    fontSize: "0.95rem",
+                                    color: "#333",
+                                    lineHeight: "1.5",
+                                }}
+                            >
+                                <strong>AI 코멘트:</strong> {combo.reason}
+                            </div>
+                        )}
+
                         <div
                             className="result-clothes"
                             style={{
@@ -45,7 +60,7 @@ export default function AIResult() {
                                 justifyContent: "center",
                                 alignItems: "flex-start",
                                 gap: "30px",
-                                flexWrap: "nowrap",
+                                flexWrap: "wrap",
                             }}
                         >
                             {["outer", "top", "bottom", "shoes"].map((type) => {
@@ -91,7 +106,7 @@ export default function AIResult() {
                                                             "/images/placeholder.png";
                                                     }}
                                                 />
-                                                <p>{item.name}</p>
+                                                <p style={{ marginTop: "5px" }}>{item.name}</p>
                                                 <p
                                                     style={{
                                                         fontSize: "0.8rem",
@@ -102,7 +117,22 @@ export default function AIResult() {
                                                 </p>
                                             </>
                                         ) : (
-                                            <p>선택된 옷 없음</p>
+                                            <div
+                                                style={{
+                                                    width: "120px",
+                                                    height: "120px",
+                                                    margin: "0 auto",
+                                                    background: "#eee",
+                                                    borderRadius: "8px",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                    color: "#999",
+                                                    fontSize: "0.8rem",
+                                                }}
+                                            >
+                                                추천 없음
+                                            </div>
                                         )}
                                     </div>
                                 );
