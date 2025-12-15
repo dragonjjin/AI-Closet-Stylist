@@ -16,7 +16,7 @@ export default function AIRecommend() {
 
     // ✅ public/data 폴더에서 clothes.json 불러오기
     useEffect(() => {
-        fetch("/data/clothes.json", { cache: "no-store" })
+        fetch("http://localhost:3001/api/clothes", { cache: "no-store" })
             .then((res) => res.json())
             .then((data) => {
                 console.log("🧥 옷 데이터 불러옴:", data);

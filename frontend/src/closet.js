@@ -91,7 +91,7 @@ export default function Closet() {
             try {
                 setLoading(true);
                 setLoadErr("");
-                const res = await fetch("/data/clothes.json", {
+                const res = await fetch("http://localhost:3001/api/clothes", {
                     cache: "no-store",
                 });
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
