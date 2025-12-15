@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./closet.css";
 
 const h = React.createElement;
@@ -74,6 +75,7 @@ function restoreFromURL(search, setters) {
 }
 
 export default function Closet() {
+    const navigate = useNavigate();
     const [sourceItems, setSourceItems] = useState([]);
     const [filter, setFilter] = useState("전체");
     const [sortKey, setSortKey] = useState("정렬: 최신순");
@@ -91,9 +93,7 @@ export default function Closet() {
             try {
                 setLoading(true);
                 setLoadErr("");
-                const res = await fetch("http://localhost:3001/api/clothes", {
-                    cache: "no-store",
-                });
+                const res = await fetch("http://localhost:3001/api/clothes");
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
                 const normalized = (Array.isArray(data) ? data : []).map(
@@ -109,18 +109,14 @@ export default function Closet() {
         })();
     }, []);
 
-    // 뒤로가기(popstate) 이벤트 → URL 복원
-    // 뒤로가기(popstate) 시 상태 복원
     useEffect(() => {
         const onPop = () => {
-            // 1️⃣ 모든 필터 초기화
             setFeatureFilter(null);
             setSubTypeFilter(null);
             setBrandFilter(null);
             setThicknessFilter(null);
             setFilter("전체");
 
-            // 2️⃣ 10ms 후 URL 복원 (React 상태 갱신 순서 보장)
             setTimeout(() => {
                 restoreFromURL(window.location.search, {
                     setFeatureFilter,
@@ -134,7 +130,6 @@ export default function Closet() {
 
         window.addEventListener("popstate", onPop);
 
-        // 첫 진입 시 URL 복원
         restoreFromURL(window.location.search, {
             setFeatureFilter,
             setSubTypeFilter,
@@ -146,7 +141,6 @@ export default function Closet() {
         return () => window.removeEventListener("popstate", onPop);
     }, []);
 
-    // 카테고리별 카운트
     const counts = useMemo(() => {
         const map = { 전체: sourceItems.length };
         for (const t of FILTERS.slice(1))
@@ -154,7 +148,6 @@ export default function Closet() {
         return map;
     }, [sourceItems]);
 
-    // 필터링
     const filtered = useMemo(() => {
         let base = sourceItems;
         if (filter !== "전체") base = base.filter((i) => i.type === filter);
@@ -175,7 +168,6 @@ export default function Closet() {
         thicknessFilter,
     ]);
 
-    // 정렬
     const sorted = useMemo(() => {
         const arr = [...filtered];
         const map = {
@@ -188,7 +180,6 @@ export default function Closet() {
         return arr;
     }, [filtered, sortKey]);
 
-    // 페이지네이션
     const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
     const pageSafe = Math.min(Math.max(1, page), totalPages);
     const paged = useMemo(() => {
@@ -196,7 +187,6 @@ export default function Closet() {
         return sorted.slice(start, start + pageSize);
     }, [sorted, pageSafe]);
 
-    // 필터 변경 시 첫 페이지로
     useEffect(
         () => setPage(1),
         [
@@ -209,7 +199,6 @@ export default function Closet() {
         ]
     );
 
-    // ─────────────── NAV ───────────────
     const Nav = h("nav", { id: "nav3", role: "navigation" }, [
         h("a", { href: "/", className: "logo" }, "AI Closet"),
         h(
@@ -257,13 +246,12 @@ export default function Closet() {
             {
                 id: "btnNavUpload",
                 className: "nav-upload-btn",
-                onClick: () => alert("옷 등록 기능은 준비 중입니다."),
+                onClick: () => navigate("/closet/upload"),
             },
             "옷 등록하기"
         ),
     ]);
 
-    // ─────────────── TOOLBAR ───────────────
     const Toolbar = h("section", { className: "toolbar" }, [
         h(
             "div",
@@ -293,7 +281,6 @@ export default function Closet() {
         ),
     ]);
 
-    // ─────────────── CARD ───────────────
     const Card = (item) =>
         h("article", { key: item.id, className: "pcard" }, [
             h(
@@ -335,7 +322,6 @@ export default function Closet() {
                 ),
             ]),
 
-            // 특징 / 소분류
             h(
                 "div",
                 { className: "badges" },
@@ -382,7 +368,6 @@ export default function Closet() {
                 ].filter(Boolean)
             ),
 
-            // 두께감
             item.thickness
                 ? h(
                       "div",
@@ -407,7 +392,6 @@ export default function Closet() {
                   )
                 : null,
 
-            // 색상
             h(
                 "div",
                 { className: "colors" },
@@ -422,7 +406,6 @@ export default function Closet() {
             ),
         ]);
 
-    // ─────────────── 본문 / 페이지 ───────────────
     const GridOrEmpty =
         sorted.length > 0
             ? h(
@@ -464,7 +447,6 @@ export default function Closet() {
               ])
             : null;
 
-    // ─────────────── 렌더링 ───────────────
     return h("div", { className: "closet-page" }, [
         Nav,
         h("main", { className: "closet-container" }, [
