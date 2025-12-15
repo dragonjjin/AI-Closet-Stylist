@@ -1,90 +1,144 @@
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import "./App.css"; // 스타일은 App.css를 공유해서 사용
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import "./App.css"; 
+import "./CalendarPage.css"; 
 
 export default function CalendarPage() {
     const navigate = useNavigate();
 
-    // ─────────────── [캘린더 상태 및 로직] ───────────────
-    const [viewDate, setViewDate] = useState(new Date());
-    const [startDate, setStartDate] = useState(null);
-    const [endDate, setEndDate] = useState(null);
+    // ─────────────── [상태 관리] ───────────────
+    const [viewDate, setViewDate] = useState(new Date()); 
+    const [selectedDate, setSelectedDate] = useState(null); 
+    const [isModalOpen, setIsModalOpen] = useState(false); 
+    
+    // [핵심] events 상태를 localStorage와 연동
+    const [events, setEvents] = useState({});
+    const [newEventInput, setNewEventInput] = useState(""); 
 
+    // 컴포넌트 로드 시 localStorage에서 일정 불러오기
+    useEffect(() => {
+        const savedEvents = localStorage.getItem("myCalendarEvents");
+        if (savedEvents) {
+            setEvents(JSON.parse(savedEvents));
+        }
+    }, []);
+
+    // events 상태가 변경될 때마다 localStorage에 저장
+    useEffect(() => {
+        // 빈 객체가 아닐 때 혹은 초기 로드 이후 저장
+        if (Object.keys(events).length >= 0) {
+            localStorage.setItem("myCalendarEvents", JSON.stringify(events));
+        }
+    }, [events]);
+
+    // ─────────────── [날짜 계산 로직] ───────────────
     const changeMonth = (offset) => {
         const newDate = new Date(viewDate);
         newDate.setMonth(newDate.getMonth() + offset);
         setViewDate(newDate);
     };
 
+    const getDateKey = (year, month, day) => {
+        return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    };
+
     const handleDateClick = (day) => {
-        const clickedDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
-
-        if (!startDate || (startDate && endDate)) {
-            setStartDate(clickedDate);
-            setEndDate(null);
-        } else if (startDate && !endDate) {
-            if (clickedDate < startDate) {
-                setStartDate(clickedDate);
-            } else {
-                setEndDate(clickedDate);
-            }
-        }
+        const year = viewDate.getFullYear();
+        const month = viewDate.getMonth();
+        const dateKey = getDateKey(year, month, day);
+        
+        setSelectedDate({ year, month, day, dateKey });
+        setIsModalOpen(true);
+        setNewEventInput(""); 
     };
 
-    const getPeriodText = () => {
-        if (!startDate) return "AI 추천을 받을 기간의 시작일을 선택해주세요.";
-        const startStr = `${startDate.getMonth() + 1}/${startDate.getDate()}`;
-        if (!endDate) return `${startStr} ~ (종료일 선택)`;
-        const endStr = `${endDate.getMonth() + 1}/${endDate.getDate()}`;
-        return `📅 선택된 기간: ${startStr} ~ ${endStr}`;
+    // ─────────────── [일정 추가/삭제 로직] ───────────────
+    const handleAddEvent = () => {
+        if (!newEventInput.trim()) return;
+        if (!selectedDate) return;
+
+        const { dateKey } = selectedDate;
+        const newEvent = {
+            id: Date.now(),
+            title: newEventInput,
+        };
+
+        setEvents((prev) => {
+            const currentDayEvents = prev[dateKey] || [];
+            return {
+                ...prev,
+                [dateKey]: [...currentDayEvents, newEvent]
+            };
+        });
+
+        setNewEventInput(""); 
     };
 
+    const handleDeleteEvent = (e, dateKey, id) => {
+        e.stopPropagation(); 
+        setEvents((prev) => {
+            const updatedDayEvents = prev[dateKey].filter((evt) => evt.id !== id);
+            // 만약 일정이 다 지워지면 키 자체를 삭제할 수도 있지만, 빈 배열로 둬도 무방함
+            return {
+                ...prev,
+                [dateKey]: updatedDayEvents
+            };
+        });
+    };
+
+    // ─────────────── [렌더링 로직] ───────────────
     const renderCalendarGrid = () => {
         const year = viewDate.getFullYear();
         const month = viewDate.getMonth();
         const firstDay = new Date(year, month, 1).getDay();
         const lastDate = new Date(year, month + 1, 0).getDate();
-
         const days = [];
 
         for (let i = 0; i < firstDay; i++) {
-            days.push(<div key={`empty-${i}`} className="day-cell empty"></div>);
+            days.push(<div key={`empty-${i}`} className="cal-cell empty"></div>);
         }
 
         for (let day = 1; day <= lastDate; day++) {
+            const dateKey = getDateKey(year, month, day);
+            const dayEvents = events[dateKey] || [];
+            
             const currentDate = new Date(year, month, day);
             const isSun = currentDate.getDay() === 0;
             const isSat = currentDate.getDay() === 6;
-
-            let className = "day-cell";
-            if (isSun) className += " sun";
-            if (isSat) className += " sat";
-
-            if (startDate && currentDate.getTime() === startDate.getTime()) {
-                className += " range-start";
-            } else if (endDate && currentDate.getTime() === endDate.getTime()) {
-                className += " range-end";
-            } else if (startDate && endDate && currentDate > startDate && currentDate < endDate) {
-                className += " in-range";
+            
+            let cellClass = "cal-cell";
+            if (isSun) cellClass += " sun";
+            if (isSat) cellClass += " sat";
+            
+            const today = new Date();
+            if (
+                today.getFullYear() === year &&
+                today.getMonth() === month &&
+                today.getDate() === day
+            ) {
+                cellClass += " today";
             }
 
             days.push(
-                <div
-                    key={day}
-                    className={className}
-                    onClick={() => handleDateClick(day)}
-                >
-                    <span className="day-number">{day}</span>
+                <div key={day} className={cellClass} onClick={() => handleDateClick(day)}>
+                    <div className="cal-date-num">{day}</div>
+                    
+                    {/* [수정됨] 점 대신 텍스트 리스트 출력 */}
+                    <div className="cal-events-list">
+                        {dayEvents.map((evt) => (
+                            <div key={evt.id} className="event-item-text">
+                                {evt.title}
+                            </div>
+                        ))}
+                    </div>
                 </div>
             );
         }
         return days;
     };
-    // ──────────────────────────────────────────────────
 
     return (
-        <>
-            {/* 공통 네비게이션 바 */}
+        <div className="calendar-page-wrapper">
             <nav id="nav3">
                 <Link to="/" className="logo">AI Closet</Link>
                 <ul>
@@ -94,61 +148,85 @@ export default function CalendarPage() {
                     <li><a href="#!">menu4</a></li>
                     <li><a href="#!">menu5</a></li>
                 </ul>
-                <button
-                    className="nav-upload-btn"
+                <button 
+                    className="nav-upload-btn" 
                     onClick={() => navigate("/closet/upload")}
                 >
                     옷 등록하기
                 </button>
             </nav>
 
-            {/* 캘린더 페이지 컨텐츠 */}
-            <main className="page-container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px' }}>
-                <h2>🗓️ 코디 캘린더</h2>
-                <p style={{marginBottom: '20px', color: '#666'}}>
-                    원하는 날짜나 기간을 선택하여 AI 코디 추천을 받아보세요.
-                </p>
+            <main className="calendar-main-container">
+                <div className="cal-header">
+                    <h2>📅 나의 일정 관리</h2>
+                    <p>날짜를 클릭하여 일정을 추가하거나 삭제하세요.</p>
+                </div>
 
-                <section className="calendar-section">
-                    <div className="calendar-container">
-                        <div className="calendar-header">
-                            <button onClick={() => changeMonth(-1)}>◀ 이전 달</button>
-                            <h4>{viewDate.getFullYear()}년 {viewDate.getMonth() + 1}월</h4>
-                            <button onClick={() => changeMonth(1)}>다음 달 ▶</button>
-                        </div>
-
-                        <div className="calendar-days-header">
-                            <div className="day-name sun">일</div>
-                            <div className="day-name">월</div>
-                            <div className="day-name">화</div>
-                            <div className="day-name">수</div>
-                            <div className="day-name">목</div>
-                            <div className="day-name">금</div>
-                            <div className="day-name sat">토</div>
-                        </div>
-
-                        <div className="calendar-grid">
-                            {renderCalendarGrid()}
-                        </div>
+                <div className="cal-body">
+                    <div className="cal-nav">
+                        <button onClick={() => changeMonth(-1)}>◀ 이전 달</button>
+                        <h3>{viewDate.getFullYear()}년 {viewDate.getMonth() + 1}월</h3>
+                        <button onClick={() => changeMonth(1)}>다음 달 ▶</button>
                     </div>
 
-                    <div className="selected-range-info">
-                        {getPeriodText()}
+                    <div className="cal-grid-header">
+                        <div className="sun">일</div>
+                        <div>월</div>
+                        <div>화</div>
+                        <div>수</div>
+                        <div>목</div>
+                        <div>금</div>
+                        <div className="sat">토</div>
                     </div>
-                    
-                    {/* 기간 선택 후 동작할 버튼 예시 */}
-                    <div style={{textAlign: 'center', marginTop: '20px'}}>
-                        <button 
-                            className="ai-recommend-btn"
-                            disabled={!startDate || !endDate}
-                            style={{ opacity: (!startDate || !endDate) ? 0.5 : 1, cursor: (!startDate || !endDate) ? 'not-allowed' : 'pointer'}}
-                            onClick={() => alert(`선택된 기간 (${getPeriodText()})으로 AI 추천을 시작합니다!`)}
-                        >
-                            선택한 기간으로 코디 추천받기
-                        </button>
+
+                    <div className="cal-grid">
+                        {renderCalendarGrid()}
                     </div>
-                </section>
+                </div>
             </main>
-        </>
+
+            {/* 일정 추가/관리 모달 */}
+            {isModalOpen && selectedDate && (
+                <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>
+                                {selectedDate.month + 1}월 {selectedDate.day}일 일정
+                            </h3>
+                            <button className="close-btn" onClick={() => setIsModalOpen(false)}>✕</button>
+                        </div>
+                        
+                        <ul className="event-list">
+                            {(events[selectedDate.dateKey] || []).length > 0 ? (
+                                (events[selectedDate.dateKey]).map((evt) => (
+                                    <li key={evt.id}>
+                                        <span>▪ {evt.title}</span>
+                                        <button 
+                                            style={{color:"#e74c3c", background:"none", border:"none", cursor:"pointer", fontWeight:"bold"}}
+                                            onClick={(e) => handleDeleteEvent(e, selectedDate.dateKey, evt.id)}
+                                        >
+                                            삭제
+                                        </button>
+                                    </li>
+                                ))
+                            ) : (
+                                <li style={{color:"#999", justifyContent:"center"}}>일정이 없습니다.</li>
+                            )}
+                        </ul>
+
+                        <div className="add-event-box">
+                            <input 
+                                type="text" 
+                                placeholder="일정 입력" 
+                                value={newEventInput}
+                                onChange={(e) => setNewEventInput(e.target.value)}
+                                onKeyDown={(e) => { if(e.key === 'Enter') handleAddEvent(); }}
+                            />
+                            <button onClick={handleAddEvent}>추가</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 }

@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./UploadCloth.css";
+// [수정] 설정 파일에서 API 주소 가져오기
+import { API_BASE_URL } from "./apiConfig";
 
 const CLOTH_TYPES = ["아우터", "상의", "하의", "신발"];
 const THICKNESS_OPTIONS = ["", "얇음", "보통", "두꺼움"];
@@ -8,14 +10,13 @@ const THICKNESS_OPTIONS = ["", "얇음", "보통", "두꺼움"];
 export default function UploadCloth() {
     const navigate = useNavigate();
     
-    // 입력 상태 관리
     const [name, setName] = useState("");
     const [brand, setBrand] = useState("");
     const [type, setType] = useState(CLOTH_TYPES[0]);
     const [subType, setSubType] = useState("");
     const [thickness, setThickness] = useState(THICKNESS_OPTIONS[0]);
     const [colors, setColors] = useState("");
-    const [currentColor, setCurrentColor] = useState("#000000"); // 컬러 피커용
+    const [currentColor, setCurrentColor] = useState("#000000");
     const [features, setFeatures] = useState("");
     const [imageFile, setImageFile] = useState(null);
     
@@ -52,8 +53,9 @@ export default function UploadCloth() {
         formData.append("image", imageFile); // Multer 등 백엔드 미들웨어가 처리
 
         try {
+            // [수정] 상수(API_BASE_URL)를 사용하여 주소 조합
             const res = await fetch(
-                "http://localhost:3001/api/clothes/upload",
+                `${API_BASE_URL}/api/clothes/upload`,
                 {
                     method: "POST",
                     body: formData, // 헤더에 Content-Type 설정하지 말 것 (브라우저가 자동 설정)
@@ -64,7 +66,6 @@ export default function UploadCloth() {
 
             if (res.ok) {
                 setMessage(`옷 등록 성공: ${data.cloth.name}`);
-                // 폼 초기화
                 setName(""); setBrand(""); setSubType("");
                 setThickness(THICKNESS_OPTIONS[0]); setColors(""); setFeatures("");
                 setImageFile(null);
@@ -87,7 +88,6 @@ export default function UploadCloth() {
             <h2>새 옷 등록</h2>
             <form onSubmit={handleSubmit} className="upload-form">
                 
-                {/* 이름 입력 */}
                 <div className="form-group">
                     <label htmlFor="name">옷 이름:</label>
                     <input
