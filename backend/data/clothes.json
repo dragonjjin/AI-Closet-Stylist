@@ -1,5 +1,19 @@
 [
     {
+        "id": "1765802153905",
+        "name": "1",
+        "type": "아우터",
+        "brand": "브랜드 미지정",
+        "subType": "",
+        "colors": [
+            "#000000"
+        ],
+        "thickness": "",
+        "features": [],
+        "imageUrl": "/images/cloths/cloth-1765802153899.png",
+        "createdAt": "2025-12-15T12:35:53.905Z"
+    },
+    {
         "id": "1765783964516",
         "name": "스탠다드 푸퍼 다운 자켓",
         "type": "아우터",
