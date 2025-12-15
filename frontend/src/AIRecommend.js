@@ -13,6 +13,9 @@ export default function AIRecommend() {
     });
     const [category, setCategory] = useState("아우터");
     const [loading, setLoading] = useState(false);
+    
+    // [수정 1] 위치 정보를 저장할 state 추가
+    const [location, setLocation] = useState({ lat: null, lon: null });
 
     // public/data 폴더에서 clothes.json 불러오기
     useEffect(() => {
@@ -42,6 +45,20 @@ export default function AIRecommend() {
                 console.error("옷 데이터 불러오기 실패:", err);
                 setAllClothes([]);
             });
+            
+        // [수정 2] 브라우저 위치 정보 가져오기
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const { latitude, longitude } = position.coords;
+                    console.log("📍 사용자 위치 확보:", latitude, longitude);
+                    setLocation({ lat: latitude, lon: longitude });
+                },
+                (error) => {
+                    console.error("위치 정보를 가져올 수 없습니다 (IP 기반으로 대체됩니다):", error);
+                }
+            );
+        }
     }, []);
 
     // 카테고리별 필터링 (한글 기준)
@@ -58,7 +75,14 @@ export default function AIRecommend() {
     const handleRecommend = async () => {
         try {
             setLoading(true);
-            const res = await fetch("http://localhost:3001/api/recommend", {
+
+            // [수정 3] URL에 위도/경도 쿼리 파라미터 추가
+            let url = "http://localhost:3001/api/recommend";
+            if (location.lat && location.lon) {
+                url += `?lat=${location.lat}&lon=${location.lon}`;
+            }
+
+            const res = await fetch(url, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -74,7 +98,8 @@ export default function AIRecommend() {
                 state: {
                     allClothes,
                     selectedItems,
-                    recommendations: data.recommendations || [],
+                    recommendations: data.recommendations || [], // backend 응답 구조 확인 필요 (배열이 바로 오는지, 객체 안에 있는지)
+                    // 만약 backend가 배열을 바로 반환한다면 그냥 data 라고 써야 함
                 },
             });
         } catch (err) {
@@ -87,6 +112,8 @@ export default function AIRecommend() {
     return (
         <div className="ai-page">
             <h2>AI 코디 추천</h2>
+            {/* 위치 정보 수신 여부 표시 (선택 사항) */}
+            {location.lat && <p style={{fontSize: "0.8rem", color: "green"}}>📍 날씨 기반 추천 활성화됨</p>}
 
             <div className="category-bar">
                 {["아우터", "상의", "하의", "신발"].map((cat) => (
@@ -161,7 +188,7 @@ export default function AIRecommend() {
                         onClick={handleRecommend}
                         disabled={loading}
                     >
-                        {loading ? "AI가 코디 중..." : "AI 추천받기"}
+                        {loading ? "AI가 날씨를 분석하여 코디 중..." : "AI 추천받기"}
                     </button>
                 </div>
             </div>

@@ -1,7 +1,53 @@
 // src/App.js
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import "./App.css";
+
+// ────────────────────────────────────────────────────────────────
+// [추가] 기상청 좌표 변환 함수 (위경도 -> 격자좌표)
+// ────────────────────────────────────────────────────────────────
+function dfs_xy_conv(code, v1, v2) {
+  const RE = 6371.00877; // 지구 반경(km)
+  const GRID = 5.0; // 격자 간격(km)
+  const SLAT1 = 30.0; // 투영 위도1(degree)
+  const SLAT2 = 60.0; // 투영 위도2(degree)
+  const OLON = 126.0; // 기준점 경도(degree)
+  const OLAT = 38.0; // 기준점 위도(degree)
+  const XO = 43; // 기준점 X좌표(GRID)
+  const YO = 136; // 기준점 Y좌표(GRID)
+
+  const DEGRAD = Math.PI / 180.0;
+  const RADDEG = 180.0 / Math.PI;
+
+  const re = RE / GRID;
+  const slat1 = SLAT1 * DEGRAD;
+  const slat2 = SLAT2 * DEGRAD;
+  const olon = OLON * DEGRAD;
+  const olat = OLAT * DEGRAD;
+
+  let sn = Math.tan(Math.PI * 0.25 + slat2 * 0.5) / Math.tan(Math.PI * 0.25 + slat1 * 0.5);
+  sn = Math.log(Math.cos(slat1) / Math.cos(slat2)) / Math.log(sn);
+  let sf = Math.tan(Math.PI * 0.25 + slat1 * 0.5);
+  sf = (Math.pow(sf, sn) * Math.cos(slat1)) / sn;
+  let ro = Math.tan(Math.PI * 0.25 + olat * 0.5);
+  ro = (re * sf) / Math.pow(ro, sn);
+
+  const rs = {};
+  if (code === "toXY") {
+    rs["lat"] = v1;
+    rs["lng"] = v2;
+    let ra = Math.tan(Math.PI * 0.25 + v1 * DEGRAD * 0.5);
+    ra = (re * sf) / Math.pow(ra, sn);
+    let theta = v2 * DEGRAD - olon;
+    if (theta > Math.PI) theta -= 2.0 * Math.PI;
+    if (theta < -Math.PI) theta += 2.0 * Math.PI;
+    theta *= sn;
+    rs["x"] = Math.floor(ra * Math.sin(theta) + XO + 0.5);
+    rs["y"] = Math.floor(ro - ra * Math.cos(theta) + YO + 0.5);
+  }
+  return rs;
+}
+// ────────────────────────────────────────────────────────────────
 
 function normalizeItem(raw, idx = 0) {
   const id = String(raw?.id ?? Date.now() + "-" + idx);
@@ -101,15 +147,108 @@ function App() {
   const [weatherLoading, setWeatherLoading] = useState(true);
   const [weatherError, setWeatherError] = useState("");
   const [randomClothes, setRandomClothes] = useState([]);
+  const [viewDate, setViewDate] = useState(new Date()); // 현재 보고 있는 달
+  const [startDate, setStartDate] = useState(null); // 기간 시작일
+  const [endDate, setEndDate] = useState(null);     // 기간 종료일
 
+  // [캘린더] 월 이동 함수
+  const changeMonth = (offset) => {
+    const newDate = new Date(viewDate);
+    newDate.setMonth(newDate.getMonth() + offset);
+    setViewDate(newDate);
+  };
+
+  // [캘린더] 날짜 클릭 핸들러 (기간 선택 로직)
+  const handleDateClick = (day) => {
+    const clickedDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
+
+    // 1. 아무것도 선택 안된 경우 -> 시작일 설정
+    if (!startDate || (startDate && endDate)) {
+      setStartDate(clickedDate);
+      setEndDate(null);
+    } 
+    // 2. 시작일만 있는 경우 -> 종료일 설정 (단, 시작일보다 앞서면 시작일을 변경)
+    else if (startDate && !endDate) {
+      if (clickedDate < startDate) {
+        setStartDate(clickedDate);
+      } else {
+        setEndDate(clickedDate);
+      }
+    }
+  };
+
+  // [캘린더] 날짜 렌더링 헬퍼
+  const renderCalendarGrid = () => {
+    const year = viewDate.getFullYear();
+    const month = viewDate.getMonth();
+
+    // 이번 달의 첫 날 요일 (0:일, 1:월 ...)
+    const firstDay = new Date(year, month, 1).getDay();
+    // 이번 달의 마지막 날짜
+    const lastDate = new Date(year, month + 1, 0).getDate();
+
+    const days = [];
+
+    // 빈 칸 채우기 (첫 주)
+    for (let i = 0; i < firstDay; i++) {
+      days.push(<div key={`empty-${i}`} className="day-cell empty"></div>);
+    }
+
+    // 날짜 채우기
+    for (let day = 1; day <= lastDate; day++) {
+      const currentDate = new Date(year, month, day);
+      
+      // 스타일 결정을 위한 조건 확인
+      const isSun = currentDate.getDay() === 0;
+      const isSat = currentDate.getDay() === 6;
+      
+      // 선택 상태 확인
+      let className = "day-cell";
+      if (isSun) className += " sun";
+      if (isSat) className += " sat";
+
+      if (startDate && currentDate.getTime() === startDate.getTime()) className += " range-start";
+      else if (endDate && currentDate.getTime() === endDate.getTime()) className += " range-end";
+      else if (startDate && endDate && currentDate > startDate && currentDate < endDate) className += " in-range";
+
+      days.push(
+        <div 
+          key={day} 
+          className={className} 
+          onClick={() => handleDateClick(day)}
+        >
+          <span className="day-number">{day}</span>
+        </div>
+      );
+    }
+    return days;
+  };
+
+  // [캘린더] 선택된 기간 텍스트
+  const getPeriodText = () => {
+    if (!startDate) return "AI 추천을 받을 기간을 선택해주세요.";
+    const startStr = `${startDate.getMonth()+1}/${startDate.getDate()}`;
+    if (!endDate) return `${startStr} ~ (종료일 선택)`;
+    const endStr = `${endDate.getMonth()+1}/${endDate.getDate()}`;
+    return `📅 선택된 기간: ${startStr} ~ ${endStr}`;
+  };
+
+  // ────────────────────────────────────────────────────────────────
+  // [수정] 날씨 조회: Geolocation -> 좌표변환 -> API 호출
+  // ────────────────────────────────────────────────────────────────
   useEffect(() => {
-    async function fetchWeather() {
+    const fetchWeather = async (nx, ny) => {
       try {
         setWeatherLoading(true);
         setWeatherError("");
 
-        // proxy 설정을 사용하므로 절대경로 대신 상대경로 사용
-        const res = await fetch(`/api/weather/current`);
+        // 좌표가 있으면 쿼리 파라미터로 전달, 없으면(null) 백엔드 기본값 사용
+        let url = `/api/weather/current`;
+        if (nx && ny) {
+          url += `?nx=${nx}&ny=${ny}`;
+        }
+
+        const res = await fetch(url);
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}`);
         }
@@ -122,15 +261,36 @@ function App() {
       } finally {
         setWeatherLoading(false);
       }
-    }
+    };
 
-    fetchWeather();
+    // 위치 정보 가져오기 시도
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          
+          // 위경도 -> 기상청 격자좌표(X, Y) 변환
+          const { x, y } = dfs_xy_conv("toXY", lat, lon);
+          console.log(`📍 위치 감지: ${lat}, ${lon} -> 격자: ${x}, ${y}`);
+          
+          fetchWeather(x, y);
+        },
+        (error) => {
+          console.warn("⚠️ 위치 정보 권한 거부 또는 에러, 기본값으로 조회합니다.", error);
+          fetchWeather(null, null); // 위치 못 가져오면 인자 없이 호출
+        }
+      );
+    } else {
+      // 브라우저가 지원 안 할 경우
+      fetchWeather(null, null);
+    }
   }, []);
 
   useEffect(() => {
     async function fetchClothes() {
       try {
-        const res = await fetch("/data/clothes.json");
+        const res = await fetch("http://localhost:3001/api/clothes");
         if (!res.ok) return;
         const data = await res.json();
         const normalized = (Array.isArray(data) ? data : []).map(normalizeItem);
@@ -146,6 +306,7 @@ function App() {
   const goToCloset = () => navigate("/closet");
   const goToAI = () => navigate("/AI");
 
+  // 상세 페이지 이동 핸들러 (기존 유지)
   const goToDetail = (item) => {
     navigate(`/closet_detail?id=${encodeURIComponent(item.id)}`, {
         state: { item },
@@ -154,7 +315,7 @@ function App() {
 
   const renderWeather = () => {
     if (weatherLoading) {
-      return <p className="weather-message">날씨 정보를 불러오는 중입니다.</p>;
+      return <p className="weather-message">날씨 정보를 불러오는 중입니다...</p>;
     }
     if (weatherError) {
       return <p className="weather-message">날씨 정보를 가져오지 못했습니다.</p>;
@@ -164,7 +325,6 @@ function App() {
     }
 
     const loc = weather.location || {};
-    const regId = weather.regId || "";
     const regionName =
       weather.regionName ||
       (weather.region && weather.region.name) ||
@@ -335,7 +495,7 @@ function App() {
         <div className="weather-summary">{summary}</div>
 
         <div className="weather-location-main">
-          {regionName || loc.city || loc.region || "-"}
+          📍 {regionName || loc.city || loc.region || "위치 확인 중..."}
         </div>
 
         <div className="weather-info-list">
@@ -371,13 +531,18 @@ function App() {
       <nav id="nav3">
         <a href="/" className="logo">AI Closet</a>
         <ul>
-            <li><a href="#" onClick={(e)=>{e.preventDefault(); goToCloset();}}>옷장</a></li>
-            <li><a href="#" onClick={(e)=>{e.preventDefault(); goToAI();}}>AI 추천</a></li>
-            <li><a href="#">menu3</a></li>
-            <li><a href="#">menu4</a></li>
-            <li><a href="#">menu5</a></li>
+            <li><Link to="/closet">옷장</Link></li>
+            <li><Link to="/AI">AI 추천</Link></li>
+            <li><Link to="/calendar">캘린더</Link></li>
+            <li><a href="#!">menu4</a></li>
+            <li><a href="#!">menu5</a></li>
         </ul>
-        <select><option>=test=</option></select>
+        <button 
+          className="nav-upload-btn" 
+          onClick={() => navigate("/closet/upload")}
+        >
+          옷 등록하기
+        </button>
       </nav>
 
       <main className="clothes-area">
@@ -389,6 +554,7 @@ function App() {
 
         <div className="main-dashboard">
           
+          {/* 오늘의 추천 코디 (랜덤) - 상세 페이지 연결됨 */}
           <section className="random-clothes-section">
             <h3>오늘의 추천 코디 (랜덤)</h3>
             
@@ -398,7 +564,7 @@ function App() {
                   <div 
                     key={item.id} 
                     className="mini-card"
-                    onClick={() => goToDetail(item)}
+                    onClick={() => goToDetail(item)} // ✨ 여기서 상세페이지로 이동합니다
                   >
                     <div className="mini-thumb">
                       <img 
@@ -431,6 +597,37 @@ function App() {
             </div>
           </aside>
         </div>
+        
+        {/* 캘린더 섹션 */}
+        <section className="calendar-section">
+          <h3>📅 AI 코디 캘린더 (기간 설정)</h3>
+
+          <div className="calendar-container">
+            <div className="calendar-header">
+              <button onClick={() => changeMonth(-1)}>◀ 이전 달</button>
+              <h4>{viewDate.getFullYear()}년 {viewDate.getMonth() + 1}월</h4>
+              <button onClick={() => changeMonth(1)}>다음 달 ▶</button>
+            </div>
+
+            <div className="calendar-days-header">
+              <div className="day-name sun">일</div>
+              <div className="day-name">월</div>
+              <div className="day-name">화</div>
+              <div className="day-name">수</div>
+              <div className="day-name">목</div>
+              <div className="day-name">금</div>
+              <div className="day-name sat">토</div>
+            </div>
+
+            <div className="calendar-grid">
+              {renderCalendarGrid()}
+            </div>
+          </div>
+
+          <div className="selected-range-info">
+            {getPeriodText()}
+          </div>
+        </section>
 
         <section className="ai-section">
           <button className="ai-recommend-btn" onClick={goToAI}>
